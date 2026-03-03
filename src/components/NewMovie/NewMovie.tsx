@@ -1,32 +1,46 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { TextField } from '../TextField';
+import { Movie } from '../../types/Movie';
 
-export const NewMovie = ({ onAdd }) => {
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    imgUrl: '',
-    imdbUrl: '',
-    imdbId: '',
-  });
+type Props = {
+  onAdd?: (movie: Movie) => void;
+};
 
+const urlRegex =
+  // eslint-disable-next-line max-len
+  /^((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@,.\w_]*)#?(?:[,.!/\\\w]*))?)$/;
+
+const createEmptyMovie = (): Movie => ({
+  title: '',
+  description: '',
+  imgUrl: '',
+  imdbUrl: '',
+  imdbId: '',
+});
+
+export const NewMovie: React.FC<Props> = ({ onAdd }) => {
+  const [form, setForm] = useState<Movie>(createEmptyMovie());
   const [count, setCount] = useState(0);
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name: keyof Movie, value: string) => {
     setForm(prev => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const isFormValid =
-    form.title.trim() &&
-    form.imgUrl.trim() &&
-    form.imdbUrl.trim() &&
-    form.imdbId.trim();
+  const isTitleValid = form.title.trim().length > 0;
+  const isImgUrlValid =
+    form.imgUrl.trim().length > 0 && urlRegex.test(form.imgUrl);
+  const isImdbUrlValid =
+    form.imdbUrl.trim().length > 0 && urlRegex.test(form.imdbUrl);
+  const isImdbIdValid = form.imdbId.trim().length > 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const isFormValid =
+    isTitleValid && isImgUrlValid && isImdbUrlValid && isImdbIdValid;
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
     if (!isFormValid) {
       return;
@@ -34,14 +48,7 @@ export const NewMovie = ({ onAdd }) => {
 
     onAdd?.(form);
 
-    setForm({
-      title: '',
-      description: '',
-      imgUrl: '',
-      imdbUrl: '',
-      imdbId: '',
-    });
-
+    setForm(createEmptyMovie());
     setCount(prev => prev + 1);
   };
 
